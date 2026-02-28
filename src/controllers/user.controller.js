@@ -5,6 +5,7 @@ import { uploadOnCloudinary,deleteFromCloudinary } from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import bcrypt from 'bcrypt'
 import { response } from "express";
 
 const generateAccessAndRefereshTokens = async (userId) => {
@@ -270,10 +271,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
 const changeCurrentPassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body;
-
-  const user = await User.findById(req.user?._id);
+  const user = await User.findById(req.user?._id).select("+password"); 
   const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
-
   if (!isPasswordCorrect) {
     throw new ApiError(400, "invalid Old Password");
   }
@@ -393,12 +392,13 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
 });
 
 const getUserChannelProfile = asyncHandler(async (req, res) => {
-  const { user } = req.params;
-  if (!user?.trim()) {
+  const { username } = req.params;
+  if (!username?.trim()) {
     throw new ApiError(400, "Username is missing");
   }
-
-  const channel = User.aggregate([
+  console.log("username:",username);
+  
+  const channel = await User.aggregate([
     {
       $match: {
         username: username?.toLowerCase(),
@@ -429,7 +429,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
           $size: "$subscribedTo",
         },
         isSubscribed: {
-          $condition: {
+          $cond: {
             if: { $in: [req.user?._id, "$subscribers.subscriber"] },
             then: true,
             else: false,
@@ -450,7 +450,8 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
       },
     },
   ]);
-
+  console.log("channel:", channel);
+  
   if (!channel?.length) {
     throw new ApiError(404, "channel does not exists");
   }
