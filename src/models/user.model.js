@@ -43,11 +43,9 @@ const userSchema=new Schema(
         },
         coverImagePublicId:{
             type:String,
-            required:true,
         },
         coverImageResourceType:{
             type:String,
-            required:true,
         },
         watchHistory:[
             {

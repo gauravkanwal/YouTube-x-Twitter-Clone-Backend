@@ -356,7 +356,7 @@ const updateVideo = asyncHandler(async (req, res) => {
     updatedData.description = description;
   }
 
-  const updatedVideo = await Video.findByIdAndUpdate(videoId, updatedData, {
+  const updatedVideo = await Video.findOneAndUpdate({_id:videoId, owner:req.user._id}, updatedData, {
     new: true,
   });
 
