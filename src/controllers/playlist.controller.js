@@ -12,7 +12,7 @@ const createPlaylist = asyncHandler(async (req, res) => {
   if (!name || !name.trim() || !description || !description.trim()) {
     throw new ApiError(
       400,
-      "The name or description of the playlist can;t be empty!"
+      "The name or description of the playlist can't be empty!"
     );
   }
 
@@ -44,7 +44,7 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
   const result = await Playlist.aggregate([
     {
       $match: {
-        owner: mongoose.Types.ObjectId(userId),
+        owner: new mongoose.Types.ObjectId(userId),
       },
     },
     {
@@ -106,7 +106,7 @@ const getPlaylistById = asyncHandler(async (req, res) => {
   const result = await Playlist.aggregate([
     {
       $match: {
-        _id: mongoose.Types.ObjectId(playlistId),
+        _id: new mongoose.Types.ObjectId(playlistId),
       },
     },
     {
@@ -125,17 +125,28 @@ const getPlaylistById = asyncHandler(async (req, res) => {
             },
           },
           {
-            $project: {
-              username: 1,
-              fullName: 1,
-              avatar: 1,
-            },
-          },
-          {
             $addFields: {
               owner: {
                 $first: "$owner",
               },
+            },
+          },
+          {
+            $project: {
+              username: 1,
+              fullName: 1,
+              avatar: 1,
+              videoFile:1,
+              thumbnail:1,
+              title:1,
+              description:1,
+              views:1,
+              createdAt:1,
+              owner:{
+                username:1,
+                fullName:1,
+                avatar:1
+              }
             },
           },
         ],
@@ -143,7 +154,7 @@ const getPlaylistById = asyncHandler(async (req, res) => {
     },
   ]);
 
-  if (!result) {
+  if (!result.length) {
     throw new ApiError(400, "Something went wrong while fetching the playlist");
   }
 
@@ -242,7 +253,7 @@ const deletePlaylist = asyncHandler(async (req, res) => {
   }
 
   const deletedPlaylist=await Playlist.findOneAndDelete({_id:playlistId});
-  if(!deletePlaylist){
+  if(!deletedPlaylist){
     throw new ApiError(400,'Something went wrong while deleting the playlist')
   }
 
@@ -282,7 +293,7 @@ const updatePlaylist = asyncHandler(async (req, res) => {
   }
 
   return res.status(200).json(
-    new ApiResponse(200,updatePlaylist,'Playlist updated successfully')
+    new ApiResponse(200,updatedPlaylist,'Playlist updated successfully')
   )
 });
 
